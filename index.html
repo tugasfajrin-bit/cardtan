@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Your Card</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f7ede2; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        /* 105mm x 148mm Portrait Proportion Container */
+        .card-container {
+            width: 85vw;
+            max-width: 360px;
+            aspect-ratio: 105 / 148;
+            perspective: 1200px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        /* Slide Control Styles for 4 steps */
+        .card-page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            transition: all 0.8s ease-in-out;
+            background: #fff;
+        }
+
+        .card-page img, .card-page video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background-color: #fff; 
+        }
+
+        /* Webkit overrides to hide potential hidden video elements or overlays on iPhones */
+        video::-webkit-media-controls {
+            display: none !important;
+        }
+
+        /* Interaction States */
+        .hidden-page {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.9) translateY(20px);
+        }
+
+        .active-page {
+            opacity: 1;
+            z-index: 5;
+            transform: scale(1) translateY(0);
+        }
+
+        /* Tap overlay message */
+        .action-hint {
+            margin-top: 25px;
+            padding: 10px 25px;
+            background: #f28482;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(242, 132, 130, 0.3);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Audio File -->
+    <audio id="bgMusic" src="song.mp3" loop preload="auto"></audio>
+
+    <!-- The Interactive Card Box -->
+    <div class="card-container" onclick="advanceCard()">
+        
+        <!-- PAGE 1: FRONT COVER -->
+        <div id="page1" class="card-page active-page">
+            <img src="front.png" alt="Card Front">
+        </div>
+
+        <!-- PAGE 2: MIDDLE REVEAL -->
+        <div id="page2" class="card-page hidden-page">
+            <img src="middle.png" alt="Card Middle">
+        </div>
+
+        <!-- PAGE 3: INSIDE REVEAL -->
+        <div id="page3" class="card-page hidden-page">
+            <img src="inside.png" alt="Card Inside">
+        </div>
+
+        <!-- PAGE 4: VIDEO FINAL -->
+        <div id="page4" class="card-page hidden-page">
+            <!-- Removed 'controls' attribute entirely to completely hide the play bar/buttons -->
+            <video id="cardVideo" loop playsinline muted preload="auto">
+                <source src="video.mp4" type="video/mp4">
+            </video>
+        </div>
+
+    </div>
+
+    <!-- Status Button Label underneath -->
+    <button id="hintBtn" class="action-hint">tap to open card ✉️❤️</button>
+
+    <script>
+        let currentStep = 1;
+
+        function advanceCard() {
+            const music = document.getElementById('bgMusic');
+            const video = document.getElementById('cardVideo');
+            const p1 = document.getElementById('page1');
+            const p2 = document.getElementById('page2');
+            const p3 = document.getElementById('page3');
+            const p4 = document.getElementById('page4');
+            const hint = document.getElementById('hintBtn');
+
+            if (currentStep === 1) {
+                music.play().catch(e => console.log("Audio playback click handled", e));
+                p1.className = "card-page hidden-page";
+                p2.className = "card-page active-page";
+                hint.innerText = "pencet lagi";
+                currentStep = 2;
+            } else if (currentStep === 2) {
+                p2.className = "card-page hidden-page";
+                p3.className = "card-page active-page";
+                hint.innerText = "lagi";
+                currentStep = 3;
+            } else if (currentStep === 3) {
+                p3.className = "card-page hidden-page";
+                p4.className = "card-page active-page";
+                hint.innerText = "hehe love u";
+                
+                // Aggressive programmatic autoplay execution
+                video.currentTime = 0;
+                let playPromise = video.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch(e => {
+                        console.log("Autoplay fallback kicked in:", e);
+                        // Safe alternative tap recovery if hardware stalls
+                        document.addEventListener('click', () => { video.play(); }, { once: true });
+                    });
+                }
+                currentStep = 4;
+            } else {
+                video.pause();
+                video.currentTime = 0;
+                p4.className = "card-page hidden-page";
+                p1.className = "card-page active-page";
+                hint.innerText = "tap to open card ✉️❤️";
+                currentStep = 1;
+            }
+        }
+    </script>
+</body>
+</html>
